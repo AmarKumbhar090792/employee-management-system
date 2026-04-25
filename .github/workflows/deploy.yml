@@ -10,27 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
 
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY }}
 
           script: |
-            cd /home/ubuntu/app
-            
+            echo "Deploying new version..."
+
+            sudo docker pull amar090792/employee-app:latest
+
             sudo docker stop employee-app || true
             sudo docker rm employee-app || true
-            
-            sudo docker pull amar090792/employee-app:latest
-            
+
             sudo docker run -d \
-              -p 8080:8080 \
               --name employee-app \
+              --link mysql-db:mysql-db \
+              -p 8080:8080 \
+              --restart always \
               amar090792/employee-app:latest
